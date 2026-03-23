@@ -1,0 +1,84 @@
+# Derivtex Configuration
+# Copy to .env and fill in your actual credentials
+
+deriv:
+  app_id: "YOUR_APP_ID"  # From Deriv API portal
+  api_token: "YOUR_API_TOKEN"  # From Deriv account settings
+  ws_url: "wss://ws.derivws.com/websockets/v3"
+  rest_url: "https://api.deriv.com"
+
+trading:
+  instrument: "R_30"  # Volatility 30 (1s)
+  contract_type: "DIGITAL"  # DIGITAL or CFD
+  duration: 1  # seconds
+  duration_unit: "s"
+
+  # Trading hours (UTC)
+  trading_hours:
+    start: "08:00"
+    end: "20:00"
+  avoid_hours:
+    - "00:00-02:00"
+
+strategy:
+  ema_fast: 20
+  ema_slow: 50
+  rsi_period: 14
+  atr_period: 14
+  adx_period: 14
+
+  # Entry confirmation ticks
+  crossover_lookback: 3
+
+  # ADX thresholds
+  adx_trending: 25
+  adx_ranging: 20
+
+  # RSI thresholds for ranging mode
+  rsi_oversold: 30
+  rsi_overbought: 70
+  rsi_neutral_low: 40
+  rsi_neutral_high: 60
+
+  # ATR multipliers
+  atr_tp_multiplier: 3.0
+  atr_sl_multiplier: 1.5
+  atr_trailing_activation: 1.5
+  atr_trailing_distance: 0.5
+  atr_min_tp_percent: 0.003  # 0.3%
+  atr_min_sl_percent: 0.002  # 0.2%
+
+  # Time stop (seconds)
+  time_stop: 60
+
+risk:
+  risk_per_trade: 0.01  # 1%
+  risk_per_trade_high_prob: 0.02  # 2%
+  min_rr_ratio: 2.0
+
+  daily_loss_limit: 0.05  # 5%
+  daily_trade_limit: 40
+  consecutive_loss_limit: 3
+  pause_after_losses: 900  # 15 minutes in seconds
+
+  atr_volatility_threshold: 2.0  # Pause if ATR > 2x historical average
+  atr_increase_reduction: 0.25  # Reduce position by 25% if ATR increases 20%
+
+  # Position size limits
+  max_position_size: null  # null = no limit
+  min_position_size: 1.0
+
+monitoring:
+  dashboard_port: 8501
+  log_level: "INFO"
+  save_trades: true
+  save_ticks: false
+
+notifications:
+  telegram:
+    enabled: false
+    bot_token: ""
+    chat_id: ""
+  discord:
+    enabled: false
+    webhook_url: ""

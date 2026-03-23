@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  bot:
+    build: .
+    container_name: derivtex-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./config:/app/config
+    ports:
+      - "8501:8501"  # Streamlit dashboard
+    command: >
+      sh -c "
+      python main.py &
+      streamlit run src/dashboard.py --server.address 0.0.0.0 --server.port 8501
+      "
+    # For production, you might want separate services:
+    # - bot service (trading)
+    # - dashboard service (monitoring only)
+
+  # Optional: Separate dashboard service
+  # dashboard:
+  #   build: .
+  #   container_name: derivtex-dashboard
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8501:8501"
+  #   command: streamlit run src/dashboard.py --server.address 0.0.0.0 --server.port 8501
+  #   depends_on:
+  #     - bot

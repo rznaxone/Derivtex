@@ -1,0 +1,47 @@
+# Derivtex Risk Management Configuration
+# This file contains dynamic risk parameters and limits
+
+# Position sizing
+position_sizing:
+  method: "risk_based"  # risk_based, fixed_lot, percentage
+  default_lot_size: 1.0
+  max_lot_size: 100.0
+
+# Daily limits (reset at 00:00 UTC)
+daily_limits:
+  max_loss_percent: 5.0  # Stop trading if daily loss exceeds this
+  max_trades: 40
+  max_consecutive_losses: 3
+  pause_after_losses_seconds: 900
+
+# Circuit breakers
+circuit_breakers:
+  enabled: true
+  market_extreme_volatility: true  # Pause if ATR > threshold
+  api_error_pause: 300  # Pause 5 minutes on API errors
+  disconnect_pause: 60  # Pause on WebSocket disconnect
+
+# Adaptive adjustments
+adaptive:
+  reduce_on_high_atr: true
+  atr_increase_threshold: 0.20  # 20% increase triggers reduction
+  atr_increase_reduction: 0.25  # Reduce position by 25%
+  atr_decrease_threshold: 0.20
+  trending_mode_multiplier: 2.0  # Wider stops in trending mode
+  ranging_mode_multiplier: 1.2  # Tighter stops in ranging mode
+
+# Market regime detection
+market_regime:
+  adx_period: 14
+  adx_trending_threshold: 25
+  adx_ranging_threshold: 20
+  lookback_periods: 50
+
+# Time-based filters
+time_filters:
+  enabled: true
+  avoid_sessions:
+    - "00:00-02:00"  # Low liquidity
+  optimal_sessions:
+    - "08:00-20:00"
+  timezone: "UTC"
