@@ -57,8 +57,8 @@ class Strategy:
         self.risk_manager = risk_manager
         self.backtest_mode = backtest_mode
 
-        # Initialize indicators
-        self.indicators = Indicators(config)
+        # Initialize indicators with strategy-specific config
+        self.indicators = Indicators(self.strategy_config)
 
         # Signal tracking
         self._last_signal: Optional[Signal] = None

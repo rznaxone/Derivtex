@@ -20,36 +20,56 @@ trading:
   avoid_hours:
     - "00:00-02:00"
 
-strategy:
+# Strategy selection
+selection_mode: "manual"  # "manual", "auto", "ensemble"
+active_strategies: ["ema_rsi"]  # List of active strategies
+
+# Strategy-specific weights (for ensemble mode)
+ensemble_weights:
+  ema_rsi: 1.0
+  macd_crossover: 1.0
+  bollinger_squeeze: 1.0
+
+# Auto regime mapping (for auto mode)
+auto_regime_mapping:
+  trending: ["ema_rsi", "macd_crossover"]
+  ranging: ["bollinger_squeeze"]
+  volatile: []  # No strategies in extreme volatility
+
+# EMA+RSI Strategy (default/fallback)
+ema_rsi:
   ema_fast: 20
   ema_slow: 50
   rsi_period: 14
   atr_period: 14
   adx_period: 14
-
-  # Entry confirmation ticks
   crossover_lookback: 3
-
-  # ADX thresholds
   adx_trending: 25
   adx_ranging: 20
-
-  # RSI thresholds for ranging mode
-  rsi_oversold: 30
-  rsi_overbought: 70
   rsi_neutral_low: 40
   rsi_neutral_high: 60
-
-  # ATR multipliers
   atr_tp_multiplier: 3.0
   atr_sl_multiplier: 1.5
-  atr_trailing_activation: 1.5
-  atr_trailing_distance: 0.5
-  atr_min_tp_percent: 0.003  # 0.3%
-  atr_min_sl_percent: 0.002  # 0.2%
-
-  # Time stop (seconds)
+  atr_min_tp_percent: 0.003
+  atr_min_sl_percent: 0.002
   time_stop: 60
+
+# MACD Strategy
+macd_crossover:
+  macd_fast: 12
+  macd_slow: 26
+  macd_signal: 9
+  macd_tp_multiplier: 2.0
+  macd_sl_multiplier: 1.0
+
+# Bollinger Bands Strategy
+bollinger_squeeze:
+  bb_period: 20
+  bb_std: 2.0
+  bb_squeeze_threshold: 0.001  # 0.1% width
+  bb_squeeze_lookback: 5
+  bb_sl_multiplier: 1.0
+  bb_tp_multiplier: 1.5
 
 risk:
   risk_per_trade: 0.01  # 1%

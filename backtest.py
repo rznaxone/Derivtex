@@ -19,7 +19,7 @@ import logging
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
 
 from indicators import Indicators, MarketRegime
-from strategy import Strategy, Signal, SignalType
+from strategy_manager import StrategyManager
 from risk_manager import RiskManager
 from monitor import Monitor
 from logger import setup_logger
@@ -82,10 +82,11 @@ class Backtester:
         self.backtest_config = backtest_config
 
         # Initialize components
-        self.indicators = Indicators(config)
+        self.indicators = Indicators(config.get('strategy', {}))
         self.risk_manager = RiskManager(config, backtest_config.initial_balance) if backtest_config.enable_risk_manager else None
-        # In backtest mode, skip time filters to allow testing any data
-        self.strategy = Strategy(config, self.risk_manager, backtest_mode=True) if backtest_config.enable_risk_manager else Strategy(config, None, backtest_mode=True)
+        # In backtest mode, use strategy manager
+        config['backtest_mode'] = True  # Flag for strategies
+        self.strategy_manager = StrategyManager(config, self.risk_manager)
         self.monitor = Monitor(config)
 
         # Log strategy parameters for verification
@@ -142,16 +143,21 @@ class Backtester:
                 can_trade = True
 
             if can_trade:
-                # Use strategy.update() to get signal (includes time filters etc)
-                signal = self.strategy.update(tick)
-                if signal and signal.type not in [SignalType.HOLD, SignalType.NONE]:
-                    logger.info(f"Signal at tick {idx}: {signal.type.value}, confidence={signal.confidence:.2f}, reason={signal.reason}")
-                    await self._execute_signal(signal, tick)
-                else:
-                    # Debug why no signal - check more frequently
-                    if idx < 200 or idx % 100 == 0:  # Log first 200 ticks and then every 100
-                        crossover = self.strategy.indicators.check_crossover()
-                        logger.debug(f"No signal at tick {idx}: crossover={crossover}, RSI={values.rsi:.1f}, ADX={values.adx:.1f}, regime={values.regime.value}")
+                # Update market regime for strategy manager
+                self.strategy_manager.update_market_regime(values)
+
+                # Get signals from active strategies
+                signals = self.strategy_manager.generate_signals(tick, values)
+
+                # Combine signals
+                if signals:
+                    combined_signal = self.strategy_manager.combine_signals(signals)
+
+                    if combined_signal and combined_signal.type not in ["hold"]:
+                        logger.info(f"Signal at tick {idx}: {combined_signal.type.value}, "
+                                   f"confidence={combined_signal.confidence:.2f}, "
+                                   f"reason={combined_signal.reason}")
+                        await self._execute_signal(combined_signal, tick)
 
             # Update equity curve
             self.equity_curve.append(self.current_balance)

@@ -34,21 +34,20 @@ class Indicators:
     Uses efficient numpy operations for real-time updates.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, strategy_config: Dict[str, Any]):
         """
         Initialize indicators with configuration.
 
         Args:
-            config: Configuration dictionary with strategy parameters
+            strategy_config: Strategy-specific configuration dictionary
         """
-        self.config = config
-        self.strategy = config['strategy']
+        self.strategy = strategy_config
 
         # Buffer sizes (need enough data for calculations)
-        self.ema_period = max(self.strategy['ema_fast'], self.strategy['ema_slow'])
-        self.rsi_period = self.strategy['rsi_period']
-        self.atr_period = self.strategy['atr_period']
-        self.adx_period = self.strategy['adx_period']
+        self.ema_period = max(self.strategy.get('ema_fast', 20), self.strategy.get('ema_slow', 50))
+        self.rsi_period = self.strategy.get('rsi_period', 14)
+        self.atr_period = self.strategy.get('atr_period', 14)
+        self.adx_period = self.strategy.get('adx_period', 14)
 
         # Maximum buffer needed
         self.max_buffer = max(

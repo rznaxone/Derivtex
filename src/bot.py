@@ -11,7 +11,7 @@ import logging
 from collections import deque
 
 from deriv_client import DerivClient, TickData
-from strategy import Strategy, Signal, SignalType
+from strategy_manager import StrategyManager
 from risk_manager import RiskManager
 from trade_executor import TradeExecutor, TradeStatus
 from monitor import Monitor
@@ -39,7 +39,7 @@ class DerivBot:
         # Initialize components
         self.deriv_client = DerivClient(config)
         self.risk_manager = RiskManager(config)
-        self.strategy = Strategy(config, self.risk_manager)
+        self.strategy_manager = StrategyManager(config, self.risk_manager)
         self.trade_executor = TradeExecutor(self.deriv_client, config, self.risk_manager)
         self.monitor = Monitor(config)
         self.notifier = Notifier(config)
@@ -142,21 +142,25 @@ class DerivBot:
         self.risk_manager.update_balance(balance)
         self.monitor.update_balance(balance, tick.timestamp)
 
-        # Update ATR in risk manager
-        current_atr = self.strategy.indicators._atr
-        if current_atr:
-            self.risk_manager.update_atr(current_atr)
+        # Update market regime for strategy manager
+        # Get indicators from one of the strategies (first active)
+        active_strategies = self.strategy_manager.get_active_strategies()
+        if active_strategies:
+            # Each strategy updates its own indicators
+            # For ATR update, we'll get it from the first strategy that has it
+            for strategy in active_strategies:
+                if hasattr(strategy, 'indicators') and hasattr(strategy.indicators, '_atr'):
+                    current_atr = strategy.indicators._atr
+                    if current_atr:
+                        self.risk_manager.update_atr(current_atr)
+                        break
 
         # Check for exit signals on open trades
         open_trades = self.trade_executor.get_open_trades()
         for trade in open_trades:
-            exit_signal = self.strategy.get_exit_signal(
-                trade.to_dict(),
-                self._current_price,
-                tick.timestamp
-            )
-            if exit_signal:
-                await self._execute_exit(trade, exit_signal, self._current_price, tick.timestamp)
+            # For now, use simple exit logic based on SL/TP
+            # In future, strategies can provide exit signals
+            pass  # Trade executor handles SL/TP checks
 
         # Update open trades (check SL/TP)
         closed_trades = await self.trade_executor.update_open_trades(
@@ -164,16 +168,23 @@ class DerivBot:
             tick.timestamp
         )
 
-        # Record closed trades in monitor
+        # Record closed trades in monitor and strategy manager
         for trade in closed_trades:
             self.monitor.record_trade(trade, trade.profit)
+            # Record to strategy performance
+            if trade.metadata and 'strategy' in trade.metadata:
+                self.strategy_manager.record_trade_result(trade.metadata['strategy'], trade.profit)
 
-        # Generate new signal
-        signal = self.strategy.update(tick_dict)
+        # Generate signals from active strategies
+        signals = self.strategy_manager.generate_signals(tick_dict, None)
 
-        if signal and signal.type not in [SignalType.HOLD, SignalType.NONE]:
-            self._signals_generated += 1
-            await self._execute_signal(signal, tick_dict)
+        # Combine signals (ensemble or select one)
+        if signals:
+            combined_signal = self.strategy_manager.combine_signals(signals)
+
+            if combined_signal and combined_signal.type not in ["hold"]:
+                self._signals_generated += 1
+                await self._execute_signal(combined_signal, tick_dict)
 
         # Periodic logging
         if self._ticks_processed % 1000 == 0:
