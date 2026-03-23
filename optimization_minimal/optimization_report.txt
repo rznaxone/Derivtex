@@ -1,0 +1,45 @@
+================================================================================
+DERIVTEX STRATEGY OPTIMIZATION REPORT
+================================================================================
+
+Generated: 2026-03-23T13:29:07.961714
+
+BEST PARAMETERS
+--------------------------------------------------------------------------------
+  ema_fast: 20
+  ema_slow: 50
+  rsi_period: 14
+  atr_tp_multiplier: 3.0
+  atr_sl_multiplier: 1.5
+  adx_trending: 25
+  crossover_lookback: 3
+
+BEST METRICS
+--------------------------------------------------------------------------------
+  total_trades: 0
+  win_rate: 0.0000
+  net_profit: 0.0000
+  profit_factor: 0.0000
+  sharpe_ratio: 0.0000
+  max_drawdown: 0.0000
+  avg_win: 0.0000
+  avg_loss: 0.0000
+  total_return_pct: 0
+
+GRID SEARCH SUMMARY
+--------------------------------------------------------------------------------
+Total combinations tested: 1
+Valid results: 1
+
+TOP 10 PARAMETER SETS:
+
+1. {'ema_fast': 20, 'ema_slow': 50, 'rsi_period': 14, 'atr_tp_multiplier': 3.0, 'atr_sl_multiplier': 1.5, 'adx_trending': 25, 'crossover_lookback': 3}
+   Sharpe: 0.00, Win%: 0.0%, Trades: 0
+
+================================================================================
+RECOMMENDATIONS
+--------------------------------------------------------------------------------
+⚠ Low Sharpe ratio (<1.0). Consider parameter tuning or strategy review.
+✓ Low max drawdown (<10%). Good risk management.
+⚠ Low win rate (<45%). Strategy may need refinement.
+

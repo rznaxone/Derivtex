@@ -1,0 +1,90 @@
+================================================================================
+DERIVTEX STRATEGY OPTIMIZATION REPORT
+================================================================================
+
+Generated: 2026-03-23T13:36:32.967109
+
+BEST PARAMETERS
+--------------------------------------------------------------------------------
+  ema_fast: 20
+  ema_slow: 50
+  rsi_period: 14
+  atr_tp_multiplier: 3.0
+  atr_sl_multiplier: 1.0
+  adx_trending: 25
+  crossover_lookback: 3
+
+BEST METRICS
+--------------------------------------------------------------------------------
+  total_trades: 11
+  win_rate: 1.0000
+  net_profit: 4454.5118
+  profit_factor: inf
+  sharpe_ratio: 12.6778
+  max_drawdown: 0.0000
+  avg_win: 404.9556
+  avg_loss: 0.0000
+  total_return_pct: 44.5451
+
+GRID SEARCH SUMMARY
+--------------------------------------------------------------------------------
+Total combinations tested: 9
+Valid results: 9
+
+TOP 10 PARAMETER SETS:
+
+1. {'ema_fast': 20, 'ema_slow': 50, 'rsi_period': 14, 'atr_tp_multiplier': 3.0, 'atr_sl_multiplier': 1.0, 'adx_trending': 25, 'crossover_lookback': 3}
+   Sharpe: 12.68, Win%: 100.0%, Trades: 11
+
+2. {'ema_fast': 20, 'ema_slow': 50, 'rsi_period': 14, 'atr_tp_multiplier': 3.0, 'atr_sl_multiplier': 1.25, 'adx_trending': 25, 'crossover_lookback': 3}
+   Sharpe: 12.68, Win%: 100.0%, Trades: 11
+
+3. {'ema_fast': 20, 'ema_slow': 50, 'rsi_period': 14, 'atr_tp_multiplier': 3.0, 'atr_sl_multiplier': 1.5, 'adx_trending': 25, 'crossover_lookback': 3}
+   Sharpe: 12.68, Win%: 100.0%, Trades: 11
+
+4. {'ema_fast': 20, 'ema_slow': 50, 'rsi_period': 14, 'atr_tp_multiplier': 4.0, 'atr_sl_multiplier': 1.0, 'adx_trending': 25, 'crossover_lookback': 3}
+   Sharpe: 5.69, Win%: 100.0%, Trades: 11
+
+5. {'ema_fast': 20, 'ema_slow': 50, 'rsi_period': 14, 'atr_tp_multiplier': 4.0, 'atr_sl_multiplier': 1.25, 'adx_trending': 25, 'crossover_lookback': 3}
+   Sharpe: 5.69, Win%: 100.0%, Trades: 11
+
+6. {'ema_fast': 20, 'ema_slow': 50, 'rsi_period': 14, 'atr_tp_multiplier': 4.0, 'atr_sl_multiplier': 1.5, 'adx_trending': 25, 'crossover_lookback': 3}
+   Sharpe: 5.69, Win%: 100.0%, Trades: 11
+
+7. {'ema_fast': 20, 'ema_slow': 50, 'rsi_period': 14, 'atr_tp_multiplier': 5.0, 'atr_sl_multiplier': 1.0, 'adx_trending': 25, 'crossover_lookback': 3}
+   Sharpe: 5.28, Win%: 100.0%, Trades: 11
+
+8. {'ema_fast': 20, 'ema_slow': 50, 'rsi_period': 14, 'atr_tp_multiplier': 5.0, 'atr_sl_multiplier': 1.25, 'adx_trending': 25, 'crossover_lookback': 3}
+   Sharpe: 5.28, Win%: 100.0%, Trades: 11
+
+9. {'ema_fast': 20, 'ema_slow': 50, 'rsi_period': 14, 'atr_tp_multiplier': 5.0, 'atr_sl_multiplier': 1.5, 'adx_trending': 25, 'crossover_lookback': 3}
+   Sharpe: 5.28, Win%: 100.0%, Trades: 11
+
+================================================================================
+MONTE CARLO SIMULATION
+--------------------------------------------------------------------------------
+Simulations: 100
+Sample size: 8 trades per sim
+
+Sharpe Ratio Distribution:
+  Mean: 22.37
+  Std: 14.76
+  5th percentile: 7.99
+  95th percentile: 51.14
+
+Max Drawdown (95th percentile - worst case):
+  0.0%
+
+Net Profit Distribution:
+  Mean: $3243.81
+  Std: $102.78
+  5th percentile: $3038.56
+
+================================================================================
+RECOMMENDATIONS
+--------------------------------------------------------------------------------
+✓ Excellent Sharpe ratio (>1.5). Strategy is robust.
+✓ Low max drawdown (<10%). Good risk management.
+✓ High win rate (≥55%). Good signal quality.
+✓ Monte Carlo shows positive Sharpe in worst case (5th percentile).
+

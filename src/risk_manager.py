@@ -4,7 +4,7 @@ Handles position sizing, daily limits, circuit breakers.
 """
 
 from datetime import datetime, time, timedelta
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 from dataclasses import dataclass, field
 import logging
 from enum import Enum
@@ -70,6 +70,11 @@ class RiskManager:
         self.consecutive_loss_limit = self.risk_config.get('consecutive_loss_limit', 3)
         self.pause_after_losses = self.risk_config.get('pause_after_losses_seconds', 900)
 
+        # Per-trade loss limits
+        per_trade_config = self.risk_config.get('per_trade_limits', {})
+        self.max_loss_percent = per_trade_config.get('max_loss_percent', 0.02)  # 2% default
+        self.max_loss_absolute = per_trade_config.get('max_loss_absolute')
+
         # ATR volatility settings
         self.atr_volatility_threshold = self.risk_config.get('atr_volatility_threshold', 2.0)
         self.atr_increase_threshold = self.risk_config.get('atr_increase_threshold', 0.20)
@@ -121,7 +126,7 @@ class RiskManager:
         if self.state.historical_atr == 0.0:
             self.state.historical_atr = current_atr
 
-    def can_trade(self, high_probability: bool = False) -> tuple[bool, Optional[str]]:
+    def can_trade(self, high_probability: bool = False) -> Tuple[bool, Optional[str]]:
         """
         Check if trading is allowed based on risk rules.
 
@@ -197,6 +202,24 @@ class RiskManager:
         # Apply volatility adjustment
         position_size = self._apply_volatility_adjustment(position_size)
 
+        # Apply per-trade max loss limit
+        # Ensure that even if stop loss is hit, loss doesn't exceed max_loss_percent
+        if self.max_loss_percent > 0:
+            max_loss_amount = self.state.account_balance * self.max_loss_percent
+            # The actual loss if stop hit = position_size * price_diff
+            # So we need: position_size * price_diff <= max_loss_amount
+            max_position_by_loss = max_loss_amount / price_diff if price_diff > 0 else position_size
+            if position_size > max_position_by_loss:
+                logger.info(f"Position size reduced by max loss limit: {position_size:.2f} -> {max_position_by_loss:.2f}")
+                position_size = max_position_by_loss
+
+        # Apply absolute max loss if set
+        if self.max_loss_absolute is not None:
+            max_position_by_abs = self.max_loss_absolute / price_diff if price_diff > 0 else position_size
+            if position_size > max_position_by_abs:
+                logger.info(f"Position size reduced by absolute max loss: {position_size:.2f} -> {max_position_by_abs:.2f}")
+                position_size = max_position_by_abs
+
         # Apply limits
         if self.max_position_size and position_size > self.max_position_size:
             position_size = self.max_position_size
@@ -204,8 +227,10 @@ class RiskManager:
         if position_size < self.min_position_size:
             position_size = self.min_position_size
 
-        logger.debug(f"Position size calculated: {position_size:.2f} "
-                    f"(risk: ${risk_amount:.2f}, price diff: {price_diff:.5f})")
+        potential_loss = position_size * price_diff
+        logger.info(f"Position size: {position_size:.2f}, risk_amount: ${risk_amount:.2f}, "
+                   f"price_diff: {price_diff:.5f}, potential_loss: ${potential_loss:.2f}, "
+                   f"account_balance: ${self.state.account_balance:.2f}")
 
         return position_size
 

@@ -84,8 +84,14 @@ class Backtester:
         # Initialize components
         self.indicators = Indicators(config)
         self.risk_manager = RiskManager(config, backtest_config.initial_balance) if backtest_config.enable_risk_manager else None
-        self.strategy = Strategy(config, self.risk_manager) if backtest_config.enable_risk_manager else Strategy(config, None)
+        # In backtest mode, skip time filters to allow testing any data
+        self.strategy = Strategy(config, self.risk_manager, backtest_mode=True) if backtest_config.enable_risk_manager else Strategy(config, None, backtest_mode=True)
         self.monitor = Monitor(config)
+
+        # Log strategy parameters for verification
+        logger.info(f"Strategy parameters: EMA({config['strategy']['ema_fast']}/{config['strategy']['ema_slow']}), "
+                   f"RSI({config['strategy']['rsi_period']}), "
+                   f"ATR TP×{config['strategy']['atr_tp_multiplier']}, SL×{config['strategy']['atr_sl_multiplier']}")
 
         # State
         self.current_balance = backtest_config.initial_balance
@@ -128,14 +134,24 @@ class Backtester:
             if self.risk_manager:
                 can_trade, reason = self.risk_manager.can_trade()
                 if not can_trade:
+                    # Log why we can't trade occasionally
+                    if idx % 1000 == 0:
+                        logger.debug(f"Risk manager blocked trading at tick {idx}: {reason}")
                     continue
             else:
                 can_trade = True
 
             if can_trade:
-                signal = self.strategy._generate_signal(values, tick)
+                # Use strategy.update() to get signal (includes time filters etc)
+                signal = self.strategy.update(tick)
                 if signal and signal.type not in [SignalType.HOLD, SignalType.NONE]:
+                    logger.info(f"Signal at tick {idx}: {signal.type.value}, confidence={signal.confidence:.2f}, reason={signal.reason}")
                     await self._execute_signal(signal, tick)
+                else:
+                    # Debug why no signal - check more frequently
+                    if idx < 200 or idx % 100 == 0:  # Log first 200 ticks and then every 100
+                        crossover = self.strategy.indicators.check_crossover()
+                        logger.debug(f"No signal at tick {idx}: crossover={crossover}, RSI={values.rsi:.1f}, ADX={values.adx:.1f}, regime={values.regime.value}")
 
             # Update equity curve
             self.equity_curve.append(self.current_balance)
@@ -186,9 +202,19 @@ class Backtester:
         if self.risk_manager:
             can_trade, reason = self.risk_manager.can_trade(signal.high_probability)
             if not can_trade:
+                logger.debug(f"Signal blocked by risk manager: {reason}")
                 return
 
-            position_size = signal.position_size
+            # Recalculate position size based on current risk state
+            # This ensures max loss limits are applied with current balance
+            position_size = self.risk_manager.calculate_position_size(
+                signal.entry_price,
+                signal.stop_loss,
+                signal.high_probability
+            )
+            logger.info(f"Trade {self._trade_counter}: Using recalculated position_size={position_size:.2f}, "
+                       f"entry={signal.entry_price:.2f}, sl={signal.stop_loss:.2f}, "
+                       f"balance={self.risk_manager.state.account_balance:.2f}")
         else:
             # Fixed position size if no risk manager
             position_size = 1.0

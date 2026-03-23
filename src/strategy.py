@@ -42,18 +42,20 @@ class Strategy:
     EMA Crossover + RSI strategy with ADX market regime detection.
     """
 
-    def __init__(self, config: Dict[str, Any], risk_manager: RiskManager):
+    def __init__(self, config: Dict[str, Any], risk_manager: RiskManager, backtest_mode: bool = False):
         """
         Initialize strategy.
 
         Args:
             config: Configuration dictionary
             risk_manager: Risk manager instance
+            backtest_mode: If True, skip time filters (for backtesting)
         """
         self.config = config
         self.strategy_config = config['strategy']
         self.trading_config = config['trading']
         self.risk_manager = risk_manager
+        self.backtest_mode = backtest_mode
 
         # Initialize indicators
         self.indicators = Indicators(config)
@@ -63,12 +65,17 @@ class Strategy:
         self._last_crossover: Optional[str] = None
         self._crossover_tick_count: int = 0
 
-        # Time filters
-        self._trading_hours_start = self._parse_time(self.trading_config['trading_hours']['start'])
-        self._trading_hours_end = self._parse_time(self.trading_config['trading_hours']['end'])
-        self._avoid_hours = [
-            self._parse_time_range(hr) for hr in self.trading_config.get('avoid_hours', [])
-        ]
+        # Time filters (only if not in backtest mode)
+        if not backtest_mode:
+            self._trading_hours_start = self._parse_time(self.trading_config['trading_hours']['start'])
+            self._trading_hours_end = self._parse_time(self.trading_config['trading_hours']['end'])
+            self._avoid_hours = [
+                self._parse_time_range(hr) for hr in self.trading_config.get('avoid_hours', [])
+            ]
+        else:
+            self._trading_hours_start = None
+            self._trading_hours_end = None
+            self._avoid_hours = []
 
         logger.info("Strategy initialized")
 
@@ -83,6 +90,10 @@ class Strategy:
 
     def _is_trading_hours(self, dt: datetime) -> bool:
         """Check if current time is within trading hours."""
+        # In backtest mode, always allow trading
+        if self.backtest_mode:
+            return True
+
         current_time = dt.time()
 
         # Check avoid hours first

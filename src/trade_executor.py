@@ -12,6 +12,8 @@ from enum import Enum
 
 logger = logging.getLogger(__name__)
 
+from risk_manager import RiskManager  # For type hint
+
 class TradeStatus(Enum):
     """Trade status."""
     PENDING = "pending"

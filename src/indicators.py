@@ -4,7 +4,7 @@ Real-time calculation of EMA, RSI, ATR, ADX from tick data.
 """
 
 import numpy as np
-from typing import List, Optional
+from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 from enum import Enum
 import logging

@@ -7,6 +7,11 @@ position_sizing:
   default_lot_size: 1.0
   max_lot_size: 100.0
 
+# Per-trade loss limits
+per_trade_limits:
+  max_loss_percent: 0.02  # Max 2% loss per trade (0 to disable)
+  max_loss_absolute: null  # Absolute max loss (null = no limit)
+
 # Daily limits (reset at 00:00 UTC)
 daily_limits:
   max_loss_percent: 5.0  # Stop trading if daily loss exceeds this

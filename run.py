@@ -41,6 +41,19 @@ def fetch_data(args):
     sys.argv = ['data_fetcher.py'] + args
     asyncio.run(fetch_main())
 
+def run_optimize(args):
+    """Run optimization."""
+    from optimizer import run_optimization as optimize_main
+    import asyncio
+    # Parse args manually for the optimizer function
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data', type=str, required=True)
+    parser.add_argument('--output', type=str, default='optimization_results')
+    parser.add_argument('--metric', type=str, default='sharpe_ratio')
+    opt_args = parser.parse_args(args)
+    asyncio.run(optimize_main(opt_args.data, opt_args.output))
+
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -51,6 +64,7 @@ Examples:
   %(prog)s bot              # Run the trading bot
   %(prog)s backtest --data historical_ticks.csv --start 2024-01-01 --end 2024-12-31
   %(prog)s fetch --start 2024-01-01 --end 2024-01-31 --output data.csv
+  %(prog)s optimize --data historical_ticks.csv --output optimization_results
         """
     )
 
@@ -75,6 +89,14 @@ Examples:
     fetch_parser.add_argument('--end', type=str, required=True, help='End date (YYYY-MM-DD)')
     fetch_parser.add_argument('--output', type=str, required=True, help='Output CSV file')
     fetch_parser.add_argument('--max-ticks', type=int, default=100000, help='Maximum ticks')
+
+    # Optimize command
+    optimize_parser = subparsers.add_parser('optimize', help='Optimize strategy parameters')
+    optimize_parser.add_argument('--data', type=str, required=True, help='Historical data CSV')
+    optimize_parser.add_argument('--output', type=str, default='optimization_results', help='Output directory')
+    optimize_parser.add_argument('--metric', type=str, default='sharpe_ratio',
+                               choices=['sharpe_ratio', 'profit_factor', 'win_rate', 'net_profit'],
+                               help='Optimization metric')
 
     args = parser.parse_args()
 
@@ -107,6 +129,14 @@ Examples:
             '--max-ticks', str(args.max_ticks)
         ]
         fetch_data(fetch_args)
+
+    elif args.command == 'optimize':
+        optimize_args = [
+            '--data', args.data,
+            '--output', args.output,
+            '--metric', args.metric
+        ]
+        run_optimize(optimize_args)
 
 if __name__ == "__main__":
     main()

@@ -6,6 +6,7 @@ Fetches historical tick data from Deriv API or generates synthetic data for back
 import asyncio
 import aiohttp
 import pandas as pd
+import numpy as np
 from datetime import datetime, timedelta
 import time
 from typing import Optional, List
