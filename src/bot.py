@@ -18,6 +18,7 @@ from monitor import Monitor
 from notifier import Notifier
 from logger import setup_logger
 from config import load_config
+from strategies.base import Signal  # Import Signal for type hints
 
 logger = setup_logger(__name__)
 
